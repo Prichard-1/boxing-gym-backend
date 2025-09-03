@@ -5,12 +5,23 @@ import dotenv from "dotenv";
 dotenv.config();
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+// ✅ Allow both local dev and production frontend
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://cheerful-moonbeam-38264a.netlify.app"
+  ],
+  credentials: true
+}));
+
 app.use(express.json());
 
+// ===== In-memory stores =====
 let users = [];
+let classes = [];
 let contacts = [];
 
+// ===== Registration =====
 app.post("/api/register", (req, res) => {
   const { name, email, password, plan, role } = req.body;
   if (!name || !email || !password)
@@ -26,7 +37,7 @@ app.post("/api/register", (req, res) => {
   res.status(201).json({ message: "Registration successful", user: newUser });
 });
 
-// Login route
+// ===== Login =====
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
   const user = users.find(u => u.email === email && u.password === password);
@@ -34,50 +45,36 @@ app.post("/api/login", (req, res) => {
   res.json({ message: "Login successful", user });
 });
 
-// ===== In-memory store for classes =====
-let classes = [];
-
-// ===== Add a new class =====
+// ===== Classes =====
 app.post("/api/classes", (req, res) => {
   const { title, instructor, date, time } = req.body;
-
   if (!title || !instructor || !date || !time) {
     return res.status(400).json({ error: "All class fields are required" });
   }
-
-  const newClass = {
-    id: classes.length + 1,
-    title,
-    instructor,
-    date,
-    time,
-    createdAt: new Date(),
-  };
-
+  const newClass = { id: classes.length + 1, title, instructor, date, time, createdAt: new Date() };
   classes.push(newClass);
   console.log("✅ New class added:", newClass);
-
   res.status(201).json({ message: "Class added successfully", class: newClass });
 });
 
-// ===== Optional: Get all classes =====
-app.get("/api/classes", (req, res) => {
-  res.json(classes);
-});
+app.get("/api/classes", (req, res) => res.json(classes));
 
-
-// Contact route
+// ===== Contacts =====
 app.post("/api/contacts", (req, res) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message)
     return res.status(400).json({ error: "All fields required" });
+
   const newContact = { id: contacts.length + 1, name, email, message, createdAt: new Date() };
   contacts.push(newContact);
   console.log("✅ New contact:", newContact);
   res.status(201).json({ message: "Message sent successfully" });
 });
 
+// ===== Root =====
 app.get("/", (req, res) => res.send("🚀 Boxing Gym Backend Running..."));
 
+// ===== Start server =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
