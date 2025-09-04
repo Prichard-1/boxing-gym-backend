@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -8,16 +7,14 @@ dotenv.config();
 const app = express();
 
 // ===== CORS setup =====
-// Allow localhost (dev) and any Netlify frontend automatically
 const allowedOrigins = [
-  "http://localhost:5173", // local dev
-"https://majestic-sprite-8d5f3b.netlify.app",
-
+  "http://localhost:5173",
+  "https://majestic-sprite-8d5f3b.netlify.app",
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // Postman or server-to-server
+    if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin) || origin.endsWith(".netlify.app")) {
       return callback(null, true);
     }
@@ -37,6 +34,11 @@ let users = [];
 let classes = [];
 let contacts = [];
 let bookings = [];
+let plans = [
+  { id: 1, name: "Basic", description: "Access to gym equipment", price: 199.99 },
+  { id: 2, name: "Premium", description: "Includes classes and trainer support", price: 399.99 },
+  { id: 3, name: "Elite", description: "Unlimited access + personal trainer", price: 599.99 },
+];
 
 // ===== Middleware: Verify Token =====
 function authenticateToken(req, res, next) {
@@ -60,7 +62,7 @@ app.get("/", (req, res) => {
 
 // Register
 app.post("/api/register", (req, res) => {
-  const { name, email, password, plan = "basic", role = "user" } = req.body;
+  const { name, email, password, plan = "Basic", role = "member" } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: "All fields are required" });
 
   if (users.find(u => u.email === email)) return res.status(400).json({ error: "Email already registered" });
@@ -143,6 +145,25 @@ app.post("/api/bookings", authenticateToken, (req, res) => {
   console.log(`✅ New booking by ${user.email}:`, newBooking);
 
   res.status(201).json(newBooking);
+});
+
+// Plans
+app.get("/api/plans", (req, res) => {
+  res.json(plans);
+});
+
+app.post("/api/plans", authenticateToken, (req, res) => {
+  const user = req.user;
+  if (user.role !== "admin") return res.status(403).json({ error: "Only admins can create plans" });
+
+  const { name, description, price } = req.body;
+  if (!name || !description || !price) return res.status(400).json({ error: "All fields required" });
+
+  const newPlan = { id: plans.length + 1, name, description, price, createdAt: new Date() };
+  plans.push(newPlan);
+  console.log("✅ New plan added:", newPlan);
+
+  res.status(201).json({ message: "Plan created", plan: newPlan });
 });
 
 // ===== Start Server =====
