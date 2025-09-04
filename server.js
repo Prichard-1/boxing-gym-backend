@@ -120,6 +120,49 @@ app.post("/api/contacts", (req, res) => {
   res.status(201).json({ message: "Message sent successfully" });
 });
 
+// ===== Bookings =====
+let bookings = [];
+
+// Get all bookings (for admin) or user-specific bookings
+app.get("/api/bookings", authenticateToken, (req, res) => {
+  const user = req.user;
+
+  if (user.role === "admin") {
+    // Admin sees all bookings
+    return res.json(bookings);
+  }
+
+  // Regular user sees only their bookings
+  const userBookings = bookings.filter((b) => b.userId === user.id);
+  res.json(userBookings);
+});
+
+// Create a new booking
+app.post("/api/bookings", authenticateToken, (req, res) => {
+  const { session, date } = req.body;
+  const user = req.user;
+
+  if (!session || !date) {
+    return res.status(400).json({ error: "Session and date are required" });
+  }
+
+  const newBooking = {
+    id: bookings.length + 1,
+    userId: user.id,
+    userEmail: user.email,
+    session,
+    date,
+    createdAt: new Date(),
+  };
+
+  bookings.push(newBooking);
+  console.log(`✅ New booking by ${user.email}:`, newBooking);
+
+  res.status(201).json(newBooking);
+});
+
+
+
 // ===== Root =====
 app.get("/", (req, res) => {
   res.send("🚀 Boxing Gym Backend Running with JWT Auth...");
