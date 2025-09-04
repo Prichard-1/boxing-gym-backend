@@ -11,6 +11,8 @@ const app = express();
 // Allow localhost (dev) and any Netlify frontend automatically
 const allowedOrigins = [
   "http://localhost:5173", // local dev
+"https://majestic-sprite-8d5f3b.netlify.app",
+
 ];
 
 const corsOptions = {
