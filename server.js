@@ -1,3 +1,4 @@
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -26,13 +27,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// routes/bookings.js
-router.get('/admin/bookings', verifyAdmin, async (req, res) => {
-  const bookings = await Booking.findAll({ include: ['User'] });
-  res.json(bookings);
-});
-
-
 // ===== JWT Secret =====
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
@@ -58,6 +52,14 @@ function authenticateToken(req, res, next) {
     req.user = user;
     next();
   });
+}
+
+// ===== Middleware: Verify Admin =====
+function verifyAdmin(req, res, next) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ error: "Access denied: Admins only" });
+  }
+  next();
 }
 
 // ===== Routes =====
@@ -152,6 +154,11 @@ app.post("/api/bookings", authenticateToken, (req, res) => {
   console.log(`✅ New booking by ${user.email}:`, newBooking);
 
   res.status(201).json(newBooking);
+});
+
+// Admin Bookings
+app.get("/api/admin/bookings", authenticateToken, verifyAdmin, (req, res) => {
+  res.json(bookings);
 });
 
 // Plans

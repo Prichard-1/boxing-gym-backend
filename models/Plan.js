@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/database.js';
+import sequelize from '../middleware/database.js';
 
 const Plan = sequelize.define('Plan', {
   name: {
