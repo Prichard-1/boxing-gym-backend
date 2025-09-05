@@ -1,4 +1,3 @@
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -149,7 +148,14 @@ app.post("/api/bookings", authenticateToken, (req, res) => {
   const user = req.user;
   if (!session || !date) return res.status(400).json({ error: "Session and date required" });
 
-  const newBooking = { id: bookings.length + 1, userId: user.id, userEmail: user.email, session, date, createdAt: new Date() };
+  const newBooking = {
+    id: bookings.length + 1,
+    userId: user.id,
+    userEmail: user.email,
+    session,
+    date,
+    createdAt: new Date()
+  };
   bookings.push(newBooking);
   console.log(`✅ New booking by ${user.email}:`, newBooking);
 
@@ -178,6 +184,25 @@ app.post("/api/plans", authenticateToken, (req, res) => {
   console.log("✅ New plan added:", newPlan);
 
   res.status(201).json({ message: "Plan created", plan: newPlan });
+});
+
+// Subscribe to Plan
+app.post("/api/subscribe", authenticateToken, (req, res) => {
+  const { planId } = req.body;
+  const user = req.user;
+
+  if (!planId) return res.status(400).json({ error: "Missing planId" });
+
+  const selectedPlan = plans.find(p => p.id === planId);
+  if (!selectedPlan) return res.status(404).json({ error: "Plan not found" });
+
+  const userIndex = users.findIndex(u => u.id === user.id);
+  if (userIndex === -1) return res.status(404).json({ error: "User not found" });
+
+  users[userIndex].plan = selectedPlan.name;
+  console.log(`✅ ${user.email} subscribed to ${selectedPlan.name}`);
+
+  res.json({ message: "Subscription successful", plan: selectedPlan.name });
 });
 
 // ===== Start Server =====
