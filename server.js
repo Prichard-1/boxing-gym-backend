@@ -26,6 +26,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// routes/bookings.js
+router.get('/admin/bookings', verifyAdmin, async (req, res) => {
+  const bookings = await Booking.findAll({ include: ['User'] });
+  res.json(bookings);
+});
+
+
 // ===== JWT Secret =====
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
