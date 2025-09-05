@@ -9,7 +9,7 @@ const app = express();
 // ===== CORS setup =====
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://majestic-sprite-8d5f3b.netlify.app/",
+  "https://majestic-sprite-8d5f3b.netlify.app",
 ];
 
 const corsOptions = {
