@@ -135,7 +135,11 @@ app.post("/api/contacts", (req, res) => {
   res.status(201).json({ message: "Message sent successfully" });
 });
 
-// Bookings (no /api prefix)
+app.get("/api/contacts", (req, res) => {
+  res.json(contacts);
+});
+
+// Bookings
 app.get("/bookings", authenticateToken, (req, res) => {
   const user = req.user;
   if (user.role === "admin") return res.json(bookings);
@@ -186,7 +190,7 @@ app.post("/api/plans", authenticateToken, (req, res) => {
   res.status(201).json({ message: "Plan created", plan: newPlan });
 });
 
-// Subscribe to Plan (no auth required)
+// Subscribe to Plan
 app.post("/api/subscribe", (req, res) => {
   const { planId, email } = req.body;
 
