@@ -135,15 +135,15 @@ app.post("/api/contacts", (req, res) => {
   res.status(201).json({ message: "Message sent successfully" });
 });
 
-// Bookings
-app.get("/api/bookings", authenticateToken, (req, res) => {
+// Bookings (no /api prefix)
+app.get("/bookings", authenticateToken, (req, res) => {
   const user = req.user;
   if (user.role === "admin") return res.json(bookings);
   const userBookings = bookings.filter(b => b.userId === user.id);
   res.json(userBookings);
 });
 
-app.post("/api/bookings", authenticateToken, (req, res) => {
+app.post("/bookings", authenticateToken, (req, res) => {
   const { session, date } = req.body;
   const user = req.user;
   if (!session || !date) return res.status(400).json({ error: "Session and date required" });
@@ -186,21 +186,26 @@ app.post("/api/plans", authenticateToken, (req, res) => {
   res.status(201).json({ message: "Plan created", plan: newPlan });
 });
 
-// Subscribe to Plan
-app.post("/api/subscribe", authenticateToken, (req, res) => {
-  const { planId } = req.body;
-  const user = req.user;
+// Subscribe to Plan (no auth required)
+app.post("/api/subscribe", (req, res) => {
+  const { planId, email } = req.body;
 
-  if (!planId) return res.status(400).json({ error: "Missing planId" });
+  if (!planId || !email) {
+    return res.status(400).json({ error: "Missing planId or email" });
+  }
 
   const selectedPlan = plans.find(p => p.id === planId);
-  if (!selectedPlan) return res.status(404).json({ error: "Plan not found" });
+  if (!selectedPlan) {
+    return res.status(404).json({ error: "Plan not found" });
+  }
 
-  const userIndex = users.findIndex(u => u.id === user.id);
-  if (userIndex === -1) return res.status(404).json({ error: "User not found" });
+  const userIndex = users.findIndex(u => u.email === email);
+  if (userIndex === -1) {
+    return res.status(404).json({ error: "User not found" });
+  }
 
   users[userIndex].plan = selectedPlan.name;
-  console.log(`✅ ${user.email} subscribed to ${selectedPlan.name}`);
+  console.log(`✅ ${email} subscribed to ${selectedPlan.name}`);
 
   res.json({ message: "Subscription successful", plan: selectedPlan.name });
 });
